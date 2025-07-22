@@ -1,7 +1,13 @@
 package handlers
 
 import (
+	"bytes"
 	"database/sql"
+	"fmt"
+	"io"
+	"net/http"
+	"strings"
+	"time"
 
 	"zplus-saas/apps/backend/shared/config"
 
@@ -10,9 +16,10 @@ import (
 )
 
 type AuthHandler struct {
-	db    *sql.DB
-	redis *redis.Client
-	cfg   *config.Config
+	db         *sql.DB
+	redis      *redis.Client
+	cfg        *config.Config
+	httpClient *http.Client
 }
 
 func NewAuthHandler(db *sql.DB, redis *redis.Client, cfg *config.Config) *AuthHandler {
@@ -20,57 +27,118 @@ func NewAuthHandler(db *sql.DB, redis *redis.Client, cfg *config.Config) *AuthHa
 		db:    db,
 		redis: redis,
 		cfg:   cfg,
+		httpClient: &http.Client{
+			Timeout: 30 * time.Second,
+		},
 	}
 }
 
 func (h *AuthHandler) Register(c *fiber.Ctx) error {
-	// TODO: Implement user registration
-	return c.JSON(fiber.Map{
-		"message": "Register endpoint - TODO: Implement",
-		"status":  "coming_soon",
-	})
+	// Proxy to auth service with /api prefix
+	path := "/api" + strings.TrimPrefix(c.Path(), "/api/v1")
+	return h.proxyToAuthService(c, path)
 }
 
 func (h *AuthHandler) Login(c *fiber.Ctx) error {
-	// TODO: Implement user login
-	return c.JSON(fiber.Map{
-		"message": "Login endpoint - TODO: Implement",
-		"status":  "coming_soon",
-	})
+	path := "/api" + strings.TrimPrefix(c.Path(), "/api/v1")
+	return h.proxyToAuthService(c, path)
 }
 
 func (h *AuthHandler) RefreshToken(c *fiber.Ctx) error {
-	// TODO: Implement token refresh
-	return c.JSON(fiber.Map{
-		"message": "Refresh token endpoint - TODO: Implement",
-		"status":  "coming_soon",
-	})
+	path := "/api" + strings.TrimPrefix(c.Path(), "/api/v1")
+	return h.proxyToAuthService(c, path)
 }
 
 func (h *AuthHandler) Logout(c *fiber.Ctx) error {
-	// TODO: Implement user logout
-	return c.JSON(fiber.Map{
-		"message": "Logout endpoint - TODO: Implement",
-		"status":  "coming_soon",
-	})
+	path := "/api" + strings.TrimPrefix(c.Path(), "/api/v1")
+	return h.proxyToAuthService(c, path)
 }
 
-func (h *AuthHandler) GetProfile(c *fiber.Ctx) error {
-	// TODO: Get user profile
-	userID := c.Locals("user_id")
-	return c.JSON(fiber.Map{
-		"message": "Get profile endpoint - TODO: Implement",
-		"user_id": userID,
-		"status":  "coming_soon",
-	})
+func (h *AuthHandler) Profile(c *fiber.Ctx) error {
+	path := "/api" + strings.TrimPrefix(c.Path(), "/api/v1")
+	return h.proxyToAuthService(c, path)
 }
 
 func (h *AuthHandler) UpdateProfile(c *fiber.Ctx) error {
-	// TODO: Update user profile
-	userID := c.Locals("user_id")
-	return c.JSON(fiber.Map{
-		"message": "Update profile endpoint - TODO: Implement",
-		"user_id": userID,
-		"status":  "coming_soon",
+	path := "/api" + strings.TrimPrefix(c.Path(), "/api/v1")
+	return h.proxyToAuthService(c, path)
+}
+
+// proxyToAuthService proxies request to auth service with custom path
+func (h *AuthHandler) proxyToAuthService(c *fiber.Ctx, customPath string) error {
+	// Prepare the request URL with custom path
+	url := h.cfg.AuthServiceURL + customPath
+	if c.Request().URI().QueryString() != nil {
+		url += "?" + string(c.Request().URI().QueryString())
+	}
+
+	// Create request body reader
+	var bodyReader io.Reader
+	if c.Body() != nil {
+		bodyReader = bytes.NewReader(c.Body())
+	}
+
+	// Create HTTP request
+	req, err := http.NewRequest(c.Method(), url, bodyReader)
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	// Copy headers from original request
+	c.Request().Header.VisitAll(func(key, value []byte) {
+		// Skip hop-by-hop headers
+		keyStr := string(key)
+		if !isHopByHopHeader(keyStr) {
+			req.Header.Set(keyStr, string(value))
+		}
 	})
+
+	// Make the request
+	resp, err := h.httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to proxy request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Copy response status
+	c.Status(resp.StatusCode)
+
+	// Copy response headers
+	for key, values := range resp.Header {
+		if !isHopByHopHeader(key) {
+			for _, value := range values {
+				c.Set(key, value)
+			}
+		}
+	}
+
+	// Copy response body
+	_, err = io.Copy(c.Response().BodyWriter(), resp.Body)
+	if err != nil {
+		return fmt.Errorf("failed to copy response body: %w", err)
+	}
+
+	return nil
+}
+
+// isHopByHopHeader checks if header should be stripped when proxying
+func isHopByHopHeader(header string) bool {
+	hopByHop := []string{
+		"Connection",
+		"Keep-Alive",
+		"Proxy-Authenticate",
+		"Proxy-Authorization",
+		"Te",
+		"Trailers",
+		"Transfer-Encoding",
+		"Upgrade",
+	}
+
+	header = strings.ToLower(header)
+	for _, h := range hopByHop {
+		if strings.ToLower(h) == header {
+			return true
+		}
+	}
+	return false
 }

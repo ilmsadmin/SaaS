@@ -65,7 +65,7 @@ func Load() *Config {
 		// JWT
 		JWTSecret:           getEnv("JWT_SECRET", "your-super-secret-jwt-key"),
 		JWTExpiresIn:        getEnv("JWT_EXPIRES_IN", "24h"),
-		JWTRefreshExpiresIn: getEnv("JWT_REFRESH_EXPIRES_IN", "7d"),
+		JWTRefreshExpiresIn: getEnv("JWT_REFRESH_EXPIRES_IN", "168h"), // 7 days = 168 hours
 		JWTIssuer:           getEnv("JWT_ISSUER", "zplus-saas"),
 		JWTAudience:         getEnv("JWT_AUDIENCE", "zplus-users"),
 

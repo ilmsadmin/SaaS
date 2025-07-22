@@ -124,7 +124,7 @@ func setupRoutes(app *fiber.App, h *handlers.Handlers) {
 	auth.Post("/login", h.Auth.Login)
 	auth.Post("/refresh", h.Auth.RefreshToken)
 	auth.Post("/logout", h.Auth.Logout)
-	auth.Get("/profile", middleware.AuthRequired(), h.Auth.GetProfile)
+	auth.Get("/profile", middleware.AuthRequired(), h.Auth.Profile)
 	auth.Put("/profile", middleware.AuthRequired(), h.Auth.UpdateProfile)
 
 	// Tenant management (System level)
