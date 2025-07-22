@@ -1,0 +1,283 @@
+version: '3.8'
+
+services:
+  # Databases
+  postgres:
+    image: postgres:15-alpine
+    container_name: zplus-postgres
+    environment:
+      POSTGRES_DB: zplus_saas
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - zplus-network
+
+  mongodb:
+    image: mongo:6-jammy
+    container_name: zplus-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - zplus-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: zplus-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+      - ./infra/docker/redis/redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      - zplus-network
+
+  # MinIO for file storage
+  minio:
+    image: minio/minio:latest
+    container_name: zplus-minio
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin123
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    networks:
+      - zplus-network
+
+  # Backend Services
+  api-gateway:
+    build:
+      context: ./apps/backend/api-gateway
+      dockerfile: Dockerfile
+    container_name: zplus-api-gateway
+    environment:
+      - PORT=8080
+      - DATABASE_URL=postgres://postgres:postgres123@postgres:5432/zplus_saas?sslmode=disable
+      - REDIS_URL=redis://redis:6379
+      - MONGODB_URL=mongodb://admin:admin123@mongodb:27017
+      - JWT_SECRET=your-super-secret-jwt-key
+      - ENVIRONMENT=development
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+      - redis
+      - mongodb
+    networks:
+      - zplus-network
+    volumes:
+      - ./apps/backend/api-gateway:/app
+      - /app/vendor
+
+  auth-service:
+    build:
+      context: ./apps/backend/auth-service
+      dockerfile: Dockerfile
+    container_name: zplus-auth-service
+    environment:
+      - PORT=8081
+      - DATABASE_URL=postgres://postgres:postgres123@postgres:5432/zplus_saas?sslmode=disable
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=your-super-secret-jwt-key
+      - JWT_EXPIRES_IN=24h
+      - REFRESH_TOKEN_EXPIRES_IN=7d
+    ports:
+      - "8081:8081"
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - zplus-network
+
+  crm-service:
+    build:
+      context: ./apps/backend/crm-service
+      dockerfile: Dockerfile
+    container_name: zplus-crm-service
+    environment:
+      - PORT=8082
+      - DATABASE_URL=postgres://postgres:postgres123@postgres:5432/zplus_saas?sslmode=disable
+      - REDIS_URL=redis://redis:6379
+    ports:
+      - "8082:8082"
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - zplus-network
+
+  lms-service:
+    build:
+      context: ./apps/backend/lms-service
+      dockerfile: Dockerfile
+    container_name: zplus-lms-service
+    environment:
+      - PORT=8083
+      - DATABASE_URL=postgres://postgres:postgres123@postgres:5432/zplus_saas?sslmode=disable
+      - REDIS_URL=redis://redis:6379
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin123
+    ports:
+      - "8083:8083"
+    depends_on:
+      - postgres
+      - redis
+      - minio
+    networks:
+      - zplus-network
+
+  pos-service:
+    build:
+      context: ./apps/backend/pos-service
+      dockerfile: Dockerfile
+    container_name: zplus-pos-service
+    environment:
+      - PORT=8084
+      - DATABASE_URL=postgres://postgres:postgres123@postgres:5432/zplus_saas?sslmode=disable
+      - REDIS_URL=redis://redis:6379
+    ports:
+      - "8084:8084"
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - zplus-network
+
+  hrm-service:
+    build:
+      context: ./apps/backend/hrm-service
+      dockerfile: Dockerfile
+    container_name: zplus-hrm-service
+    environment:
+      - PORT=8085
+      - DATABASE_URL=postgres://postgres:postgres123@postgres:5432/zplus_saas?sslmode=disable
+      - REDIS_URL=redis://redis:6379
+    ports:
+      - "8085:8085"
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - zplus-network
+
+  checkin-service:
+    build:
+      context: ./apps/backend/checkin-service
+      dockerfile: Dockerfile
+    container_name: zplus-checkin-service
+    environment:
+      - PORT=8086
+      - DATABASE_URL=postgres://postgres:postgres123@postgres:5432/zplus_saas?sslmode=disable
+      - REDIS_URL=redis://redis:6379
+    ports:
+      - "8086:8086"
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - zplus-network
+
+  file-service:
+    build:
+      context: ./apps/backend/file-service
+      dockerfile: Dockerfile
+    container_name: zplus-file-service
+    environment:
+      - PORT=8087
+      - DATABASE_URL=postgres://postgres:postgres123@postgres:5432/zplus_saas?sslmode=disable
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin123
+    ports:
+      - "8087:8087"
+    depends_on:
+      - postgres
+      - minio
+    networks:
+      - zplus-network
+
+  payment-service:
+    build:
+      context: ./apps/backend/payment-service
+      dockerfile: Dockerfile
+    container_name: zplus-payment-service
+    environment:
+      - PORT=8088
+      - DATABASE_URL=postgres://postgres:postgres123@postgres:5432/zplus_saas?sslmode=disable
+      - REDIS_URL=redis://redis:6379
+      - STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key
+      - STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
+    ports:
+      - "8088:8088"
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - zplus-network
+
+  # Frontend Applications
+  web-app:
+    build:
+      context: ./apps/frontend/web
+      dockerfile: Dockerfile
+    container_name: zplus-web-app
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:8080
+      - NEXT_PUBLIC_GRAPHQL_URL=http://localhost:8080/graphql
+      - NEXTAUTH_SECRET=your-nextauth-secret
+      - NEXTAUTH_URL=http://localhost:3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api-gateway
+    networks:
+      - zplus-network
+    volumes:
+      - ./apps/frontend/web:/app
+      - /app/node_modules
+      - /app/.next
+
+  # Load Balancer
+  traefik:
+    image: traefik:v3.0
+    container_name: zplus-traefik
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"  # Traefik dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - zplus-network
+
+volumes:
+  postgres_data:
+  mongodb_data:
+  redis_data:
+  minio_data:
+
+networks:
+  zplus-network:
+    driver: bridge
