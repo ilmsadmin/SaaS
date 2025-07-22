@@ -2,28 +2,30 @@
 
 import { useState } from 'react'
 import { useAuth } from '@/lib/auth-context'
+import { useToast } from '@/hooks/use-toast'
 import Link from 'next/link'
 
 export default function RegisterForm() {
   const { register, isLoading } = useAuth()
+  const { toast } = useToast()
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     first_name: '',
     last_name: '',
   })
-  const [error, setError] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError('')
 
     try {
       await register(formData)
+      toast('Registration successful! Please check your email to verify your account.', 'success')
       // Redirect will be handled by auth context
       window.location.href = '/dashboard'
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registration failed')
+      const errorMessage = err instanceof Error ? err.message : 'Registration failed'
+      toast(errorMessage, 'error')
     }
   }
 
@@ -121,12 +123,6 @@ export default function RegisterForm() {
               />
             </div>
           </div>
-
-          {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <div className="text-sm text-red-700">{error}</div>
-            </div>
-          )}
 
           <div>
             <button

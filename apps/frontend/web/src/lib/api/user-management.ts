@@ -105,6 +105,11 @@ export const verifyEmail = async (token: string) => {
   return response.data
 }
 
+export const resendEmailVerification = async (data: { email: string }) => {
+  const response = await api.post('/email/verify/resend', data)
+  return response.data
+}
+
 // Profile Management API
 export const getProfile = async () => {
   const response = await api.get('/profile')

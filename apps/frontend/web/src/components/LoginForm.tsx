@@ -2,26 +2,28 @@
 
 import { useState } from 'react'
 import { useAuth } from '@/lib/auth-context'
+import { useToast } from '@/hooks/use-toast'
 import Link from 'next/link'
 
 export default function LoginForm() {
   const { login, isLoading } = useAuth()
+  const { toast } = useToast()
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   })
-  const [error, setError] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError('')
 
     try {
       await login(formData)
+      toast('Login successful! Redirecting...', 'success')
       // Redirect will be handled by auth context
       window.location.href = '/dashboard'
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed')
+      const errorMessage = err instanceof Error ? err.message : 'Login failed'
+      toast(errorMessage, 'error')
     }
   }
 
@@ -85,11 +87,14 @@ export default function LoginForm() {
             </div>
           </div>
 
-          {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <div className="text-sm text-red-700">{error}</div>
-            </div>
-          )}
+          <div className="flex items-center justify-between">
+            <Link
+              href="/auth/forgot-password"
+              className="text-sm text-indigo-600 hover:text-indigo-500"
+            >
+              Forgot your password?
+            </Link>
+          </div>
 
           <div>
             <button
