@@ -244,15 +244,36 @@ docker-compose logs -f
 docker-compose down
 ```
 
-### 6.5 Truy cập Application
+### 6.5 Development Scripts (Quick Start)
+
+```bash
+# Khởi động toàn bộ development environment
+./start-dev.sh
+
+# Dừng toàn bộ services
+./stop-dev.sh
+
+# Chỉ khởi động tenant service
+./start-tenant.sh
+```
+
+**Ghi chú**: Development scripts sẽ tự động:
+- Khởi động infrastructure services (PostgreSQL, Redis, MinIO)
+- Khởi động backend services (API Gateway, Auth Service, Tenant Service)
+- Khởi động frontend (Next.js)
+- Hiển thị logs và thông tin truy cập
+
+### 6.6 Truy cập Application
 
 | Service | URL | Description |
 |---------|-----|-------------|
-| **System Admin** | http://localhost:3000/system | Quản trị hệ thống |
-| **Tenant Demo** | http://tenant-demo.localhost:3000 | Tenant mẫu |
-| **API Playground** | http://localhost:8080/playground | GraphQL Playground |
+| **Frontend** | http://localhost:3000 | Main application |
+| **Admin Panel** | http://localhost:3000/admin | Tenant management interface |
+| **API Gateway** | http://localhost:8080 | Main API endpoint |
+| **Auth Service** | http://localhost:8081 | Authentication API |
+| **Tenant Service** | http://localhost:8089 | Tenant management API |
 | **API Documentation** | http://localhost:8080/docs | Swagger UI |
-| **Monitoring** | http://localhost:3001 | Grafana Dashboard |
+| **MinIO Console** | http://localhost:9001 | Object storage management |
 
 ## 🏢 Hệ thống Module
 
@@ -260,6 +281,8 @@ docker-compose down
 
 | Module | Status | Description | Features |
 |--------|--------|-------------|----------|
+| **Tenant Management** | ✅ Available | Quản lý tenant và subscription | Tenant CRUD, Plan management, Billing, Admin dashboard |
+| **Authentication** | ✅ Available | Xác thực và phân quyền | JWT, RBAC, Multi-tenant isolation |
 | **CRM** | ✅ Available | Quản lý khách hàng, bán hàng | Lead tracking, Sales pipeline, Customer analytics |
 | **LMS** | ✅ Available | Học tập trực tuyến | Course management, Video streaming, Quiz & Exams |
 | **POS** | ✅ Available | Bán hàng tại điểm | Inventory, Payment gateway, Receipt printing |

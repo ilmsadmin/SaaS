@@ -27,6 +27,7 @@ type Config struct {
 
 	// Services URLs
 	AuthServiceURL    string
+	TenantServiceURL  string
 	CRMServiceURL     string
 	HRMServiceURL     string
 	POSServiceURL     string
@@ -34,6 +35,9 @@ type Config struct {
 	CheckinServiceURL string
 	PaymentServiceURL string
 	FileServiceURL    string
+
+	// Service Ports
+	TenantServicePort string
 
 	// CORS
 	CORSAllowOrigins string
@@ -71,6 +75,7 @@ func Load() *Config {
 
 		// Services URLs
 		AuthServiceURL:    getEnv("AUTH_SERVICE_URL", "http://localhost:8081"),
+		TenantServiceURL:  getEnv("TENANT_SERVICE_URL", "http://localhost:8089"),
 		CRMServiceURL:     getEnv("CRM_SERVICE_URL", "http://localhost:8082"),
 		HRMServiceURL:     getEnv("HRM_SERVICE_URL", "http://localhost:8083"),
 		POSServiceURL:     getEnv("POS_SERVICE_URL", "http://localhost:8084"),
@@ -78,6 +83,9 @@ func Load() *Config {
 		CheckinServiceURL: getEnv("CHECKIN_SERVICE_URL", "http://localhost:8086"),
 		PaymentServiceURL: getEnv("PAYMENT_SERVICE_URL", "http://localhost:8087"),
 		FileServiceURL:    getEnv("FILE_SERVICE_URL", "http://localhost:8088"),
+
+		// Service Ports
+		TenantServicePort: getEnv("TENANT_SERVICE_PORT", "8089"),
 
 		// CORS
 		CORSAllowOrigins: getEnv("CORS_ALLOW_ORIGINS", "*"),
