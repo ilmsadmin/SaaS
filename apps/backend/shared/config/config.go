@@ -38,6 +38,7 @@ type Config struct {
 
 	// Service Ports
 	TenantServicePort string
+	CRMServicePort    string
 
 	// CORS
 	CORSAllowOrigins string
@@ -86,6 +87,7 @@ func Load() *Config {
 
 		// Service Ports
 		TenantServicePort: getEnv("TENANT_SERVICE_PORT", "8089"),
+		CRMServicePort:    getEnv("CRM_SERVICE_PORT", "8082"),
 
 		// CORS
 		CORSAllowOrigins: getEnv("CORS_ALLOW_ORIGINS", "*"),
