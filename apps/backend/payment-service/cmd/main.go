@@ -17,22 +17,22 @@ import (
 
 // Payment represents a payment record
 type Payment struct {
-	ID            int       `json:"id" db:"id"`
-	TenantID      string    `json:"tenant_id" db:"tenant_id"`
-	OrderID       string    `json:"order_id" db:"order_id"`
-	CustomerID    *int      `json:"customer_id,omitempty" db:"customer_id"`
-	CustomerName  string    `json:"customer_name" db:"customer_name"`
-	Amount        float64   `json:"amount" db:"amount"`
-	Currency      string    `json:"currency" db:"currency"`
-	PaymentMethod string    `json:"payment_method" db:"payment_method"`
-	Status        string    `json:"status" db:"status"`
-	Gateway       string    `json:"gateway" db:"gateway"`
-	GatewayTxnID  string    `json:"gateway_txn_id,omitempty" db:"gateway_txn_id"`
-	Description   string    `json:"description,omitempty" db:"description"`
-	Metadata      string    `json:"metadata,omitempty" db:"metadata"`
+	ID            int        `json:"id" db:"id"`
+	TenantID      string     `json:"tenant_id" db:"tenant_id"`
+	OrderID       string     `json:"order_id" db:"order_id"`
+	CustomerID    *int       `json:"customer_id,omitempty" db:"customer_id"`
+	CustomerName  string     `json:"customer_name" db:"customer_name"`
+	Amount        float64    `json:"amount" db:"amount"`
+	Currency      string     `json:"currency" db:"currency"`
+	PaymentMethod string     `json:"payment_method" db:"payment_method"`
+	Status        string     `json:"status" db:"status"`
+	Gateway       string     `json:"gateway" db:"gateway"`
+	GatewayTxnID  *string    `json:"gateway_txn_id,omitempty" db:"gateway_txn_id"`
+	Description   *string    `json:"description,omitempty" db:"description"`
+	Metadata      *string    `json:"metadata,omitempty" db:"metadata"`
 	ProcessedAt   *time.Time `json:"processed_at,omitempty" db:"processed_at"`
-	CreatedAt     time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt     time.Time `json:"updated_at" db:"updated_at"`
+	CreatedAt     time.Time  `json:"created_at" db:"created_at"`
+	UpdatedAt     time.Time  `json:"updated_at" db:"updated_at"`
 }
 
 // PaymentRequest represents a payment request
@@ -113,6 +113,12 @@ func (h *PaymentHandler) CreatePayment(c *fiber.Ctx) error {
 		})
 	}
 
+	// Handle metadata - ensure it's valid JSON
+	metadata := req.Metadata
+	if metadata == "" {
+		metadata = "{}"
+	}
+
 	// Create payment record
 	payment := &Payment{
 		TenantID:      tenantID,
@@ -124,8 +130,8 @@ func (h *PaymentHandler) CreatePayment(c *fiber.Ctx) error {
 		PaymentMethod: req.PaymentMethod,
 		Status:        "pending",
 		Gateway:       req.Gateway,
-		Description:   req.Description,
-		Metadata:      req.Metadata,
+		Description:   &req.Description,
+		Metadata:      &metadata,
 	}
 
 	query := `
@@ -143,9 +149,10 @@ func (h *PaymentHandler) CreatePayment(c *fiber.Ctx) error {
 		Scan(&payment.ID, &payment.CreatedAt, &payment.UpdatedAt)
 
 	if err != nil {
+		log.Printf("Failed to create payment: %v", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error":   true,
-			"message": "Failed to create payment",
+			"message": fmt.Sprintf("Failed to create payment: %v", err),
 		})
 	}
 
@@ -176,9 +183,10 @@ func (h *PaymentHandler) GetPayments(c *fiber.Ctx) error {
 
 	err := h.db.Select(&payments, query, tenantID)
 	if err != nil {
+		log.Printf("Failed to get payments: %v", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error":   true,
-			"message": "Failed to get payments",
+			"message": fmt.Sprintf("Failed to get payments: %v", err),
 		})
 	}
 

@@ -76,17 +76,17 @@ func Load() *Config {
 
 		// Services URLs
 		AuthServiceURL:    getEnv("AUTH_SERVICE_URL", "http://localhost:8081"),
-		TenantServiceURL:  getEnv("TENANT_SERVICE_URL", "http://localhost:8089"),
-		CRMServiceURL:     getEnv("CRM_SERVICE_URL", "http://localhost:8082"),
-		HRMServiceURL:     getEnv("HRM_SERVICE_URL", "http://localhost:8083"),
-		POSServiceURL:     getEnv("POS_SERVICE_URL", "http://localhost:8084"),
-		LMSServiceURL:     getEnv("LMS_SERVICE_URL", "http://localhost:8085"),
+		TenantServiceURL:  getEnv("TENANT_SERVICE_URL", "http://localhost:8082"),
+		CRMServiceURL:     getEnv("CRM_SERVICE_URL", "http://localhost:8083"),
+		HRMServiceURL:     getEnv("HRM_SERVICE_URL", "http://localhost:8089"),
+		POSServiceURL:     getEnv("POS_SERVICE_URL", "http://localhost:8085"),
+		LMSServiceURL:     getEnv("LMS_SERVICE_URL", "http://localhost:8084"),
 		CheckinServiceURL: getEnv("CHECKIN_SERVICE_URL", "http://localhost:8086"),
 		PaymentServiceURL: getEnv("PAYMENT_SERVICE_URL", "http://localhost:8087"),
 		FileServiceURL:    getEnv("FILE_SERVICE_URL", "http://localhost:8088"),
 
 		// Service Ports
-		TenantServicePort: getEnv("TENANT_SERVICE_PORT", "8089"),
+		TenantServicePort: getEnv("TENANT_SERVICE_PORT", "8082"),
 		CRMServicePort:    getEnv("CRM_SERVICE_PORT", "8082"),
 
 		// CORS

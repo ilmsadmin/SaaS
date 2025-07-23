@@ -100,7 +100,7 @@ func main() {
 	// Start server
 	port := os.Getenv("HRM_SERVICE_PORT")
 	if port == "" {
-		port = "8083"
+		port = "8089"
 	}
 
 	// Graceful shutdown

@@ -30,8 +30,13 @@ func (h *ProxyHandler) CRM(c *fiber.Ctx) error {
 
 // proxyRequest handles the actual proxying of requests to microservices
 func (h *ProxyHandler) proxyRequest(c *fiber.Ctx, serviceURL, pathPrefix string) error {
-	// Get the full path and forward it to the service
+	// Get the path and strip the API gateway prefix
 	path := c.Path()
+	// Remove /api/v1/{service}/ prefix and replace with /api/v1/
+	if strings.HasPrefix(path, "/api/v1"+pathPrefix+"/") {
+		// Replace /api/v1/hrm/ with /api/v1/
+		path = strings.Replace(path, "/api/v1"+pathPrefix+"/", "/api/v1/", 1)
+	}
 	targetURL := serviceURL + path
 
 	// Create new request
