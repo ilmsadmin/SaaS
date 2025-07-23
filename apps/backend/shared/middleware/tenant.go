@@ -14,7 +14,10 @@ func TenantMiddleware() fiber.Handler {
 		// In a production system, you would validate the tenant exists
 		// and the user has access to it
 		if tenantID != "" {
-			c.Locals("tenantID", tenantID)
+			c.Locals("tenant_id", tenantID)
+		} else {
+			// Set a default tenant for testing
+			c.Locals("tenant_id", "demo-tenant")
 		}
 
 		return c.Next()
