@@ -4,9 +4,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gofiber/fiber/v2"
 	"../models"
 	"../services"
+	"github.com/gofiber/fiber/v2"
 )
 
 type CheckinHandler struct {

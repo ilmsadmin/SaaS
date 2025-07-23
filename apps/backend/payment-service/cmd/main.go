@@ -11,8 +11,8 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq"
 	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 )
 
 // Payment represents a payment record
@@ -50,12 +50,12 @@ type PaymentRequest struct {
 
 // PaymentStats represents payment statistics
 type PaymentStats struct {
-	TotalPayments    int     `json:"total_payments"`
-	TotalAmount      float64 `json:"total_amount"`
-	SuccessfulCount  int     `json:"successful_count"`
-	PendingCount     int     `json:"pending_count"`
-	FailedCount      int     `json:"failed_count"`
-	SuccessRate      float64 `json:"success_rate"`
+	TotalPayments   int     `json:"total_payments"`
+	TotalAmount     float64 `json:"total_amount"`
+	SuccessfulCount int     `json:"successful_count"`
+	PendingCount    int     `json:"pending_count"`
+	FailedCount     int     `json:"failed_count"`
+	SuccessRate     float64 `json:"success_rate"`
 }
 
 // PaymentHandler handles payment-related requests
@@ -274,7 +274,7 @@ func (h *PaymentHandler) processPayment(paymentID int) {
 	// Simulate random success/failure (90% success rate)
 	status := "completed"
 	gatewayTxnID := fmt.Sprintf("TXN_%d_%d", paymentID, time.Now().Unix())
-	
+
 	if time.Now().Unix()%10 == 0 { // 10% failure rate
 		status = "failed"
 		gatewayTxnID = ""

@@ -11,30 +11,30 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq"
 	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 )
 
 // CheckinRecord represents a checkin/checkout record
 type CheckinRecord struct {
-	ID            int       `json:"id" db:"id"`
-	TenantID      string    `json:"tenant_id" db:"tenant_id"`
-	EmployeeID    int       `json:"employee_id" db:"employee_id"`
-	EmployeeName  string    `json:"employee_name" db:"employee_name"`
-	CheckinType   string    `json:"checkin_type" db:"checkin_type"`
-	Timestamp     time.Time `json:"timestamp" db:"timestamp"`
-	Location      string    `json:"location" db:"location"`
-	Latitude      *float64  `json:"latitude,omitempty" db:"latitude"`
-	Longitude     *float64  `json:"longitude,omitempty" db:"longitude"`
-	IPAddress     string    `json:"ip_address" db:"ip_address"`
-	DeviceInfo    string    `json:"device_info" db:"device_info"`
-	Photo         string    `json:"photo,omitempty" db:"photo"`
-	Notes         string    `json:"notes,omitempty" db:"notes"`
-	Status        string    `json:"status" db:"status"`
-	ApprovedBy    *int      `json:"approved_by,omitempty" db:"approved_by"`
-	ApprovedAt    *time.Time `json:"approved_at,omitempty" db:"approved_at"`
-	CreatedAt     time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt     time.Time `json:"updated_at" db:"updated_at"`
+	ID           int        `json:"id" db:"id"`
+	TenantID     string     `json:"tenant_id" db:"tenant_id"`
+	EmployeeID   int        `json:"employee_id" db:"employee_id"`
+	EmployeeName string     `json:"employee_name" db:"employee_name"`
+	CheckinType  string     `json:"checkin_type" db:"checkin_type"`
+	Timestamp    time.Time  `json:"timestamp" db:"timestamp"`
+	Location     string     `json:"location" db:"location"`
+	Latitude     *float64   `json:"latitude,omitempty" db:"latitude"`
+	Longitude    *float64   `json:"longitude,omitempty" db:"longitude"`
+	IPAddress    string     `json:"ip_address" db:"ip_address"`
+	DeviceInfo   string     `json:"device_info" db:"device_info"`
+	Photo        string     `json:"photo,omitempty" db:"photo"`
+	Notes        string     `json:"notes,omitempty" db:"notes"`
+	Status       string     `json:"status" db:"status"`
+	ApprovedBy   *int       `json:"approved_by,omitempty" db:"approved_by"`
+	ApprovedAt   *time.Time `json:"approved_at,omitempty" db:"approved_at"`
+	CreatedAt    time.Time  `json:"created_at" db:"created_at"`
+	UpdatedAt    time.Time  `json:"updated_at" db:"updated_at"`
 }
 
 // CheckinRequest represents a checkin request

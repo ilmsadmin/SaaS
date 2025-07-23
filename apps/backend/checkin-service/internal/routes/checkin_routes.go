@@ -1,8 +1,8 @@
 package routes
 
 import (
-	"github.com/gofiber/fiber/v2"
 	"../handlers"
+	"github.com/gofiber/fiber/v2"
 )
 
 func CheckinRoutes(app fiber.Router, handler *handlers.CheckinHandler) {

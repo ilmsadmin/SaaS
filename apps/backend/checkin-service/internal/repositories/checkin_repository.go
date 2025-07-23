@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/jmoiron/sqlx"
 	"../models"
+	"github.com/jmoiron/sqlx"
 )
 
 type CheckinRepository struct {
@@ -28,7 +28,7 @@ func (r *CheckinRepository) CreateCheckinRecord(record *models.CheckinRecord) er
 			:location, :latitude, :longitude, :ip_address, :device_info, :photo, :notes, :status
 		) RETURNING id, created_at, updated_at
 	`
-	
+
 	rows, err := r.db.NamedQuery(query, record)
 	if err != nil {
 		return fmt.Errorf("failed to create checkin record: %w", err)
@@ -222,7 +222,7 @@ func (r *CheckinRepository) CreateAttendanceSummary(summary *models.AttendanceSu
 			updated_at = NOW()
 		RETURNING id, created_at, updated_at
 	`
-	
+
 	rows, err := r.db.NamedQuery(query, summary)
 	if err != nil {
 		return fmt.Errorf("failed to create/update attendance summary: %w", err)
@@ -239,7 +239,7 @@ func (r *CheckinRepository) CreateAttendanceSummary(summary *models.AttendanceSu
 // GetAttendanceStats gets attendance statistics
 func (r *CheckinRepository) GetAttendanceStats(tenantID string, date time.Time) (*models.AttendanceStats, error) {
 	dateStr := date.Format("2006-01-02")
-	
+
 	query := `
 		SELECT 
 			COUNT(DISTINCT employee_id) as total_employees,
