@@ -2,13 +2,21 @@
 
 import { useAuth } from '@/lib/auth-context'
 import { usePathname } from 'next/navigation'
+import { useState, useEffect } from 'react'
 
 export default function AuthDebugger() {
   const { user, isLoading, isAuthenticated } = useAuth()
   const pathname = usePathname()
+  const [isMounted, setIsMounted] = useState(false)
+  const [token, setToken] = useState<string | null>(null)
 
-  // Only show in development
-  if (process.env.NODE_ENV !== 'development') {
+  useEffect(() => {
+    setIsMounted(true)
+    setToken(localStorage.getItem('access_token'))
+  }, [])
+
+  // Only show in development and after client-side mounting
+  if (process.env.NODE_ENV !== 'development' || !isMounted) {
     return null
   }
 
@@ -29,7 +37,7 @@ export default function AuthDebugger() {
           <strong>User:</strong> {user ? `${user.first_name} ${user.last_name}` : 'None'}
         </div>
         <div>
-          <strong>Token:</strong> {typeof window !== 'undefined' && localStorage.getItem('access_token') ? 'Present' : 'None'}
+          <strong>Token:</strong> {token ? 'Present' : 'None'}
         </div>
       </div>
     </div>

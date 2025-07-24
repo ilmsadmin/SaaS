@@ -46,21 +46,28 @@ start_service "auth-service" "apps/backend/auth-service" $AUTH_SERVICE_PORT
 start_service "tenant-service" "apps/backend/tenant-service" $TENANT_SERVICE_PORT
 
 # Start frontend
-echo "🎨 Starting frontend on port 3000..."
+echo "🎨 Starting web frontend on port 3000..."
 cd apps/frontend/web
-npm run dev > /tmp/frontend.log 2>&1 &
-echo $! > /tmp/frontend.pid
+npm run dev > /tmp/frontend-web.log 2>&1 &
+echo $! > /tmp/frontend-web.pid
+cd /Users/toan/Documents/project/SaaS
+
+# Start admin frontend
+echo "🎨 Starting admin frontend on port 3001..."
+cd apps/frontend/admin
+npm run dev > /tmp/frontend-admin.log 2>&1 &
+echo $! > /tmp/frontend-admin.pid
 cd /Users/toan/Documents/project/SaaS
 
 echo ""
 echo "✅ Zplus SaaS Development Environment Started!"
 echo ""
 echo "🌐 Services:"
-echo "   - Frontend:     http://localhost:3000"
+echo "   - Web Frontend: http://localhost:3000"
+echo "   - Admin Panel:  http://localhost:3001"
 echo "   - API Gateway:  http://localhost:8080"
 echo "   - Auth Service: http://localhost:8081" 
 echo "   - Tenant Service: http://localhost:8089"
-echo "   - Admin Panel:  http://localhost:3000/admin"
 echo ""
 echo "📊 Infrastructure:"
 echo "   - PostgreSQL:   localhost:5432"
@@ -71,6 +78,10 @@ echo "📝 Logs:"
 echo "   - API Gateway:  tail -f /tmp/api-gateway.log"
 echo "   - Auth Service: tail -f /tmp/auth-service.log"
 echo "   - Tenant Service: tail -f /tmp/tenant-service.log"
-echo "   - Frontend:     tail -f /tmp/frontend.log"
+echo "   - Web Frontend: tail -f /tmp/frontend-web.log"
+echo "   - Admin Panel:  tail -f /tmp/frontend-admin.log"
 echo ""
 echo "🛑 To stop all services: ./stop-dev.sh"
+echo ""
+echo "👤 To create admin user: ./create-admin.sh"
+echo "   (Run this after services are started)"

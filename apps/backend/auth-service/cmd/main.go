@@ -41,6 +41,7 @@ func main() {
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(authService)
+	adminHandler := handlers.NewAdminHandler(authService)
 
 	// Initialize middleware
 	authMiddleware := middleware.NewAuthMiddleware(jwtService)
@@ -68,7 +69,7 @@ func main() {
 		Format: "[${time}] ${status} - ${method} ${path} - ${latency}\n",
 	}))
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "http://localhost:3000,http://localhost:8080",
+		AllowOrigins:     "http://localhost:3000,http://localhost:3001,http://localhost:8080",
 		AllowMethods:     cfg.CORSAllowMethods,
 		AllowHeaders:     cfg.CORSAllowHeaders,
 		AllowCredentials: true,
@@ -99,15 +100,32 @@ func main() {
 	authProtected.Put("/profile", authHandler.UpdateProfile)
 
 	// Admin routes
-	adminProtected := api.Group("/admin")
-	adminProtected.Use(authMiddleware.RequireAuth)
-	adminProtected.Use(authMiddleware.RequireRole("admin", "super_admin"))
+	admin := api.Group("/admin")
+	adminAuth := admin.Group("/auth")
+	adminAuth.Post("/login", adminHandler.AdminLogin)
+	adminAuth.Post("/create", adminHandler.CreateAdminUser)
 
-	// Add admin endpoints here in the future
+	// Protected admin routes
+	adminProtected := adminAuth.Use(authMiddleware.RequireAuth)
+	adminProtected.Get("/validate", adminHandler.ValidateAdmin)
+
+	// Admin dashboard routes
+	adminDashboard := admin.Use(authMiddleware.RequireAuth)
+	adminDashboard.Get("/stats", adminHandler.AdminStats)
+	adminDashboard.Get("/activities", adminHandler.AdminActivities)
+	adminDashboard.Get("/health", adminHandler.AdminHealth)
+
+	// Legacy admin routes (for future use)
+	adminProtected2 := api.Group("/admin")
+	adminProtected2.Use(authMiddleware.RequireAuth)
+	adminProtected2.Use(authMiddleware.RequireRole("admin", "super_admin"))
 
 	// Start server
 	go func() {
-		port := cfg.Port
+		port := os.Getenv("AUTH_SERVICE_PORT")
+		if port == "" {
+			port = cfg.Port
+		}
 		if port == "" {
 			port = "8081"
 		}

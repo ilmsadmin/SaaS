@@ -64,6 +64,42 @@ func (h *AuthHandler) UpdateProfile(c *fiber.Ctx) error {
 	return h.proxyToAuthService(c, path)
 }
 
+func (h *AuthHandler) AdminLogin(c *fiber.Ctx) error {
+	// Convert /api/v1/admin/auth/login to /api/admin/auth/login
+	path := strings.Replace(c.Path(), "/api/v1/admin", "/api/admin", 1)
+	return h.proxyToAuthService(c, path)
+}
+
+func (h *AuthHandler) CreateAdmin(c *fiber.Ctx) error {
+	// Convert /api/v1/admin/auth/create to /api/admin/auth/create
+	path := strings.Replace(c.Path(), "/api/v1/admin", "/api/admin", 1)
+	return h.proxyToAuthService(c, path)
+}
+
+func (h *AuthHandler) ValidateAdmin(c *fiber.Ctx) error {
+	// Convert /api/v1/admin/auth/validate to /api/admin/auth/validate
+	path := strings.Replace(c.Path(), "/api/v1/admin", "/api/admin", 1)
+	return h.proxyToAuthService(c, path)
+}
+
+func (h *AuthHandler) AdminStats(c *fiber.Ctx) error {
+	// Convert /api/v1/admin/stats to /api/admin/stats
+	path := strings.Replace(c.Path(), "/api/v1/admin", "/api/admin", 1)
+	return h.proxyToAuthService(c, path)
+}
+
+func (h *AuthHandler) AdminActivities(c *fiber.Ctx) error {
+	// Convert /api/v1/admin/activities to /api/admin/activities
+	path := strings.Replace(c.Path(), "/api/v1/admin", "/api/admin", 1)
+	return h.proxyToAuthService(c, path)
+}
+
+func (h *AuthHandler) AdminHealth(c *fiber.Ctx) error {
+	// Convert /api/v1/admin/health to /api/admin/health
+	path := strings.Replace(c.Path(), "/api/v1/admin", "/api/admin", 1)
+	return h.proxyToAuthService(c, path)
+}
+
 // proxyToAuthService proxies request to auth service with custom path
 func (h *AuthHandler) proxyToAuthService(c *fiber.Ctx, customPath string) error {
 	// Prepare the request URL with custom path

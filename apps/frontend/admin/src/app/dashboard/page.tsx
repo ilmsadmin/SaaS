@@ -1,17 +1,16 @@
 'use client'
 
 import { useAdmin } from '@/contexts/AdminContext'
-import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import DashboardLayout from '@/components/DashboardLayout'
 import StatsCard from '@/components/StatsCard'
 import { Users, Building2, CreditCard, TrendingUp } from 'lucide-react'
 import RecentActivity from '@/components/RecentActivity'
 import SystemHealth from '@/components/SystemHealth'
+import ProtectedRoute from '@/components/ProtectedRoute'
 
-export default function DashboardPage() {
-  const { isAuthenticated, isLoading, user } = useAdmin()
-  const router = useRouter()
+function DashboardContent() {
+  const { user } = useAdmin()
   const [stats, setStats] = useState({
     totalTenants: 0,
     totalUsers: 0,
@@ -20,16 +19,10 @@ export default function DashboardPage() {
   })
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push('/login')
-    }
-  }, [isAuthenticated, isLoading, router])
-
-  useEffect(() => {
     // Fetch dashboard stats
     const fetchStats = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/stats`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/stats`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
           }
@@ -43,22 +36,8 @@ export default function DashboardPage() {
       }
     }
 
-    if (isAuthenticated) {
-      fetchStats()
-    }
-  }, [isAuthenticated])
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-      </div>
-    )
-  }
-
-  if (!isAuthenticated) {
-    return null
-  }
+    fetchStats()
+  }, [])
 
   return (
     <DashboardLayout>
@@ -125,5 +104,13 @@ export default function DashboardPage() {
         </div>
       </div>
     </DashboardLayout>
+  )
+}
+
+export default function DashboardPage() {
+  return (
+    <ProtectedRoute>
+      <DashboardContent />
+    </ProtectedRoute>
   )
 }

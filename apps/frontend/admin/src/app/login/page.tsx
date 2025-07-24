@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAdmin } from '@/contexts/AdminContext'
 import { useRouter } from 'next/navigation'
 import { toast } from 'react-hot-toast'
@@ -13,10 +13,11 @@ export default function LoginPage() {
   const router = useRouter()
 
   // Redirect if already authenticated
-  if (isAuthenticated) {
-    router.push('/dashboard')
-    return null
-  }
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push('/dashboard')
+    }
+  }, [isAuthenticated, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

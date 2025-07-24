@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Tenant, Plan, Subscription } from '@/types/tenant'
-import tenantService from '@/lib/tenant-service'
+import { Tenant, Plan, Subscription, CreateTenantRequest, UpdateTenantRequest } from '@/types/tenant'
+// Using mock service for development until backend is ready
+import tenantService from '@/lib/mock-tenant-service'
 
 export const useTenants = () => {
   const [tenants, setTenants] = useState<Tenant[]>([])
@@ -23,19 +24,19 @@ export const useTenants = () => {
     }
   }, [])
 
-  const createTenant = async (data: any) => {
+  const createTenant = async (data: CreateTenantRequest) => {
     try {
       const newTenant = await tenantService.createTenant(data)
       setTenants(prev => [...prev, newTenant])
       return newTenant
     } catch (err) {
-      const error = err instanceof Error ? err.message : 'Failed to create tenant'
-      setError(error)
-      throw new Error(error)
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create tenant'
+      setError(errorMessage)
+      throw new Error(errorMessage)
     }
   }
 
-  const updateTenant = async (id: string, data: any) => {
+  const updateTenant = async (id: string, data: UpdateTenantRequest) => {
     try {
       const updatedTenant = await tenantService.updateTenant(id, data)
       setTenants(prev => prev.map(tenant => 
@@ -43,9 +44,9 @@ export const useTenants = () => {
       ))
       return updatedTenant
     } catch (err) {
-      const error = err instanceof Error ? err.message : 'Failed to update tenant'
-      setError(error)
-      throw new Error(error)
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update tenant'
+      setError(errorMessage)
+      throw new Error(errorMessage)
     }
   }
 
@@ -54,9 +55,9 @@ export const useTenants = () => {
       await tenantService.deleteTenant(id)
       setTenants(prev => prev.filter(tenant => tenant.id !== id))
     } catch (err) {
-      const error = err instanceof Error ? err.message : 'Failed to delete tenant'
-      setError(error)
-      throw new Error(error)
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete tenant'
+      setError(errorMessage)
+      throw new Error(errorMessage)
     }
   }
 
@@ -68,9 +69,9 @@ export const useTenants = () => {
       ))
       return updatedTenant
     } catch (err) {
-      const error = err instanceof Error ? err.message : 'Failed to activate tenant'
-      setError(error)
-      throw new Error(error)
+      const errorMessage = err instanceof Error ? err.message : 'Failed to activate tenant'
+      setError(errorMessage)
+      throw new Error(errorMessage)
     }
   }
 
@@ -82,9 +83,9 @@ export const useTenants = () => {
       ))
       return updatedTenant
     } catch (err) {
-      const error = err instanceof Error ? err.message : 'Failed to suspend tenant'
-      setError(error)
-      throw new Error(error)
+      const errorMessage = err instanceof Error ? err.message : 'Failed to suspend tenant'
+      setError(errorMessage)
+      throw new Error(errorMessage)
     }
   }
 
@@ -130,9 +131,9 @@ export const usePlans = () => {
       setPlans(prev => [...prev, newPlan])
       return newPlan
     } catch (err) {
-      const error = err instanceof Error ? err.message : 'Failed to create plan'
-      setError(error)
-      throw new Error(error)
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create plan'
+      setError(errorMessage)
+      throw new Error(errorMessage)
     }
   }
 
@@ -144,9 +145,20 @@ export const usePlans = () => {
       ))
       return updatedPlan
     } catch (err) {
-      const error = err instanceof Error ? err.message : 'Failed to update plan'
-      setError(error)
-      throw new Error(error)
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update plan'
+      setError(errorMessage)
+      throw new Error(errorMessage)
+    }
+  }
+
+  const deletePlan = async (id: string) => {
+    try {
+      await tenantService.deletePlan(id)
+      setPlans(prev => prev.filter(plan => plan.id !== id))
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete plan'
+      setError(errorMessage)
+      throw new Error(errorMessage)
     }
   }
 
@@ -160,7 +172,8 @@ export const usePlans = () => {
     error,
     refetch: fetchPlans,
     createPlan,
-    updatePlan
+    updatePlan,
+    deletePlan
   }
 }
 

@@ -14,7 +14,7 @@ export default function SystemHealth() {
   useEffect(() => {
     const fetchSystemHealth = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/health`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/health`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
           }

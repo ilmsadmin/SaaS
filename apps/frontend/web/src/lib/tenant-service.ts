@@ -145,6 +145,12 @@ class TenantService {
       body: JSON.stringify(data),
     })
   }
+
+  async deletePlan(id: string): Promise<void> {
+    await this.request(`/plans/${id}`, {
+      method: 'DELETE',
+    })
+  }
 }
 
 export const tenantService = new TenantService()

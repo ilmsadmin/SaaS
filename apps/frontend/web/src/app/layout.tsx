@@ -13,11 +13,11 @@ export const metadata: Metadata = {
   keywords: 'SaaS, CRM, HRM, POS, LMS, multi-tenant, business platform',
 }
 
-export default function RootLayout({
-  children,
-}: {
+interface RootLayoutProps {
   children: React.ReactNode
-}) {
+}
+
+export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en">
       <body className={inter.className}>

@@ -17,7 +17,7 @@ export default function RecentActivity() {
   useEffect(() => {
     const fetchActivities = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/activities`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/activities`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
           }

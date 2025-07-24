@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -37,11 +36,12 @@ func main() {
 	}
 	defer redis.Close()
 
-	mongo, err := database.NewMongoDB(cfg.MongoURL)
-	if err != nil {
-		log.Fatal("Failed to connect to MongoDB:", err)
-	}
-	defer mongo.Client().Disconnect(context.Background())
+	// TODO: Add MongoDB when needed
+	// mongo, err := database.NewMongoDB(cfg.MongoURL)
+	// if err != nil {
+	// 	log.Fatal("Failed to connect to MongoDB:", err)
+	// }
+	// defer mongo.Client().Disconnect(context.Background())
 
 	// Initialize Fiber app
 	app := fiber.New(fiber.Config{
@@ -77,7 +77,7 @@ func main() {
 	app.Use(middleware.SecurityHeaders())
 
 	// Initialize handlers
-	handlers := handlers.New(db, redis, mongo, cfg)
+	handlers := handlers.New(db, redis, nil, cfg)
 
 	// Routes
 	setupRoutes(app, handlers)
@@ -126,6 +126,18 @@ func setupRoutes(app *fiber.App, h *handlers.Handlers) {
 	auth.Post("/logout", h.Auth.Logout)
 	auth.Get("/profile", middleware.AuthRequired(), h.Auth.Profile)
 	auth.Put("/profile", middleware.AuthRequired(), h.Auth.UpdateProfile)
+
+	// Admin authentication routes
+	admin := api.Group("/admin")
+	adminAuth := admin.Group("/auth")
+	adminAuth.Post("/login", h.Auth.AdminLogin)
+	adminAuth.Post("/create", h.Auth.CreateAdmin)
+	adminAuth.Get("/validate", middleware.AuthRequired(), h.Auth.ValidateAdmin)
+
+	// Admin dashboard routes
+	admin.Get("/stats", middleware.AuthRequired(), h.Auth.AdminStats)
+	admin.Get("/activities", middleware.AuthRequired(), h.Auth.AdminActivities)
+	admin.Get("/health", middleware.AuthRequired(), h.Auth.AdminHealth)
 
 	// Tenant management (System level)
 	tenants := api.Group("/tenants", middleware.AuthRequired(), middleware.SystemAdminRequired())

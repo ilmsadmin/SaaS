@@ -1,10 +1,10 @@
 import React from 'react'
 
-export default function AdminLayout({
-  children,
-}: {
+interface AdminLayoutProps {
   children: React.ReactNode
-}) {
+}
+
+export default function AdminLayout({ children }: AdminLayoutProps) {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="flex">

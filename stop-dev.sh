@@ -4,7 +4,7 @@
 echo "🛑 Stopping Zplus SaaS Development Environment..."
 
 # Stop backend services
-for service in api-gateway auth-service tenant-service frontend; do
+for service in api-gateway auth-service tenant-service frontend-web frontend-admin; do
     if [ -f /tmp/${service}.pid ]; then
         PID=$(cat /tmp/${service}.pid)
         if ps -p $PID > /dev/null; then

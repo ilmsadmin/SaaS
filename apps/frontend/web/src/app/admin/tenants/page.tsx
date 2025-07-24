@@ -1,18 +1,97 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Plus, Edit2, Trash2, CheckCircle, XCircle, Building, Users, Calendar } from 'lucide-react'
+import { Plus, Edit2, Trash2, CheckCircle, XCircle, Building, Users, Settings } from 'lucide-react'
 import { useTenants, usePlans } from '@/hooks/useTenants'
-import { Tenant, Plan } from '@/types/tenant'
+import { Tenant, CreateTenantRequest, UpdateTenantRequest } from '@/types/tenant'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 
 export default function TenantManagement() {
-  const { tenants, loading: tenantsLoading, error: tenantsError, activateTenant, suspendTenant } = useTenants()
+  const { tenants, loading: tenantsLoading, error: tenantsError, createTenant, updateTenant, deleteTenant, activateTenant, suspendTenant } = useTenants()
   const { plans, loading: plansLoading } = usePlans()
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null)
+  const [createFormData, setCreateFormData] = useState<CreateTenantRequest>({
+    name: '',
+    subdomain: '',
+    domain: ''
+  })
+  const [editFormData, setEditFormData] = useState<UpdateTenantRequest>({
+    name: '',
+    domain: '',
+    logo: '',
+    settings: {}
+  })
 
   const loading = tenantsLoading || plansLoading
   const error = tenantsError
+
+  const handleCreateTenant = async (e: React.FormEvent) => {
+    e.preventDefault()
+    try {
+      await createTenant(createFormData)
+      setShowCreateModal(false)
+      resetCreateForm()
+    } catch (error) {
+      console.error('Failed to create tenant:', error)
+    }
+  }
+
+  const handleUpdateTenant = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (selectedTenant) {
+      try {
+        await updateTenant(selectedTenant.id, editFormData)
+        setShowEditModal(false)
+        resetEditForm()
+      } catch (error) {
+        console.error('Failed to update tenant:', error)
+      }
+    }
+  }
+
+  const handleDeleteTenant = async (tenantId: string) => {
+    if (confirm('Are you sure you want to delete this tenant? This action cannot be undone.')) {
+      try {
+        await deleteTenant(tenantId)
+      } catch (error) {
+        console.error('Failed to delete tenant:', error)
+      }
+    }
+  }
+
+  const resetCreateForm = () => {
+    setCreateFormData({
+      name: '',
+      subdomain: '',
+      domain: ''
+    })
+  }
+
+  const resetEditForm = () => {
+    setEditFormData({
+      name: '',
+      domain: '',
+      logo: '',
+      settings: {}
+    })
+    setSelectedTenant(null)
+  }
+
+  const openEditModal = (tenant: Tenant) => {
+    setSelectedTenant(tenant)
+    setEditFormData({
+      name: tenant.name,
+      domain: tenant.domain || '',
+      logo: tenant.logo || '',
+      settings: tenant.settings || {}
+    })
+    setShowEditModal(true)
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -199,15 +278,23 @@ export default function TenantManagement() {
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end space-x-2">
                         <button
-                          onClick={() => setSelectedTenant(tenant)}
+                          onClick={() => openEditModal(tenant)}
                           className="text-blue-600 hover:text-blue-900"
+                          title="Edit Tenant"
                         >
                           <Edit2 className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteTenant(tenant.id)}
+                          className="text-red-600 hover:text-red-900"
+                          title="Delete Tenant"
+                        >
+                          <Trash2 className="h-4 w-4" />
                         </button>
                         {tenant.status === 'active' ? (
                           <button
                             onClick={() => handleSuspendTenant(tenant.id)}
-                            className="text-red-600 hover:text-red-900"
+                            className="text-yellow-600 hover:text-yellow-900"
                             title="Suspend Tenant"
                           >
                             <XCircle className="h-4 w-4" />
@@ -256,6 +343,121 @@ export default function TenantManagement() {
             ))}
           </div>
         </div>
+
+        {/* Create Tenant Modal */}
+        <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Building className="h-5 w-5 text-blue-600" />
+                Create New Tenant
+              </DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleCreateTenant} className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="name">Tenant Name</Label>
+                  <Input
+                    id="name"
+                    type="text"
+                    value={createFormData.name}
+                    onChange={(e) => setCreateFormData({ ...createFormData, name: e.target.value })}
+                    placeholder="e.g., Acme Corporation"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="subdomain">Subdomain</Label>
+                  <Input
+                    id="subdomain"
+                    type="text"
+                    value={createFormData.subdomain}
+                    onChange={(e) => setCreateFormData({ ...createFormData, subdomain: e.target.value })}
+                    placeholder="e.g., acme"
+                    required
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <Label htmlFor="domain">Custom Domain (Optional)</Label>
+                <Input
+                  id="domain"
+                  type="text"
+                  value={createFormData.domain || ''}
+                  onChange={(e) => setCreateFormData({ ...createFormData, domain: e.target.value })}
+                  placeholder="e.g., acme.com"
+                />
+              </div>
+
+              <div className="flex justify-end space-x-4">
+                <Button type="button" variant="outline" onClick={() => setShowCreateModal(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit">
+                  Create Tenant
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Tenant Modal */}
+        <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Settings className="h-5 w-5 text-blue-600" />
+                Edit Tenant
+              </DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleUpdateTenant} className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit-name">Tenant Name</Label>
+                  <Input
+                    id="edit-name"
+                    type="text"
+                    value={editFormData.name || ''}
+                    onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                    placeholder="e.g., Acme Corporation"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-domain">Custom Domain (Optional)</Label>
+                  <Input
+                    id="edit-domain"
+                    type="text"
+                    value={editFormData.domain || ''}
+                    onChange={(e) => setEditFormData({ ...editFormData, domain: e.target.value })}
+                    placeholder="e.g., acme.com"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="edit-logo">Logo URL (Optional)</Label>
+                <Input
+                  id="edit-logo"
+                  type="url"
+                  value={editFormData.logo || ''}
+                  onChange={(e) => setEditFormData({ ...editFormData, logo: e.target.value })}
+                  placeholder="https://example.com/logo.png"
+                />
+              </div>
+
+              <div className="flex justify-end space-x-4">
+                <Button type="button" variant="outline" onClick={() => setShowEditModal(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit">
+                  Update Tenant
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   )

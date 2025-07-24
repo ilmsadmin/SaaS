@@ -7,7 +7,7 @@ export interface Tenant {
   domain?: string
   logo?: string
   status: 'active' | 'suspended' | 'trial'
-  settings: Record<string, any>
+  settings: Record<string, unknown>
   created_at: string
   updated_at: string
   // Extended properties for UI
@@ -60,7 +60,7 @@ export interface UpdateTenantRequest {
   name?: string
   domain?: string
   logo?: string
-  settings?: Record<string, any>
+  settings?: Record<string, unknown>
 }
 
 export interface CreatePlanRequest {

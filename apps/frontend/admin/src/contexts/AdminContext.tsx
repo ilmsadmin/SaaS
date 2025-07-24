@@ -40,22 +40,44 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const validateToken = async (token: string) => {
+    console.log('Validating token...', token ? 'Token exists' : 'No token')
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/auth/validate`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/auth/validate`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       })
       
+      console.log('Validate response status:', response.status)
+      
       if (response.ok) {
         const userData = await response.json()
-        setUser(userData)
+        console.log('User data received:', userData)
+        
+        // The API returns the user object directly, not wrapped in a 'user' field
+        const adminUser: AdminUser = {
+          id: userData.id,
+          email: userData.email,
+          name: `${userData.first_name} ${userData.last_name}`,
+          role: userData.role === 'super_admin' ? 'super_admin' : 'admin',
+          permissions: [] // Will be populated based on role
+        }
+        setUser(adminUser)
+        console.log('User set successfully:', adminUser)
       } else {
+        console.log('Token validation failed, removing tokens')
         localStorage.removeItem('admin_token')
+        localStorage.removeItem('admin_refresh_token')
       }
     } catch (error) {
       console.error('Token validation failed:', error)
-      localStorage.removeItem('admin_token')
+      // Don't remove tokens on network errors, only on auth failures
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        console.log('Network error - keeping tokens for retry')
+      } else {
+        localStorage.removeItem('admin_token')
+        localStorage.removeItem('admin_refresh_token')
+      }
     } finally {
       setIsLoading(false)
     }
@@ -63,7 +85,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/auth/login`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -76,8 +98,21 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       }
 
       const data = await response.json()
-      localStorage.setItem('admin_token', data.token)
-      setUser(data.user)
+      
+      // Store both access and refresh tokens
+      localStorage.setItem('admin_token', data.access_token)
+      localStorage.setItem('admin_refresh_token', data.refresh_token)
+      
+      // Map the API response to our AdminUser interface
+      const adminUser: AdminUser = {
+        id: data.user.id,
+        email: data.user.email,
+        name: `${data.user.first_name} ${data.user.last_name}`,
+        role: data.user.role === 'super_admin' ? 'super_admin' : 'admin',
+        permissions: [] // Will be populated based on role
+      }
+      
+      setUser(adminUser)
       router.push('/dashboard')
     } catch (error) {
       throw error
@@ -86,6 +121,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
 
   const logout = () => {
     localStorage.removeItem('admin_token')
+    localStorage.removeItem('admin_refresh_token')
     setUser(null)
     router.push('/login')
   }
