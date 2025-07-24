@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useRouter, usePathname } from 'next/navigation'
 import { apiClient, User, LoginRequest, RegisterRequest } from './api'
 
 interface AuthContextType {
@@ -30,6 +31,8 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const queryClient = useQueryClient()
+  const router = useRouter()
+  const pathname = usePathname()
   const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   // Query to get user profile
@@ -41,16 +44,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
     queryKey: ['auth', 'profile'],
     queryFn: async () => {
       try {
-        return await apiClient.getProfile()
+        const profile = await apiClient.getProfile()
+        setIsAuthenticated(true)
+        return profile
       } catch (error) {
         // If profile fetch fails, user is not authenticated
         setIsAuthenticated(false)
+        apiClient.setAccessToken(null) // Clear invalid token
         return null
       }
     },
-    enabled: isAuthenticated,
+    enabled: typeof window !== 'undefined' && !!localStorage.getItem('access_token'), // Enable if token exists
     staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: false,
+    retry: 1,
   })
 
   // Login mutation
@@ -59,6 +65,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     onSuccess: () => {
       setIsAuthenticated(true)
       queryClient.invalidateQueries({ queryKey: ['auth'] })
+      // Redirect to dashboard after successful login
+      if (pathname === '/login') {
+        router.push('/dashboard')
+      }
     },
     onError: (error) => {
       console.error('Login failed:', error)
@@ -85,12 +95,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
     onSuccess: () => {
       setIsAuthenticated(false)
       queryClient.clear() // Clear all cached data
+      router.push('/login')
     },
     onError: (error) => {
       console.error('Logout failed:', error)
       // Still set as not authenticated even if logout API fails
       setIsAuthenticated(false)
       queryClient.clear()
+      router.push('/login')
     },
   })
 
@@ -101,9 +113,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
       : null
 
     if (token) {
-      setIsAuthenticated(true)
+      // Token exists, trigger profile fetch to validate it
+      refetch()
+    } else {
+      setIsAuthenticated(false)
     }
   }, [])
+
+  // Redirect logic based on auth state and current path
+  useEffect(() => {
+    if (!isLoading) {
+      if (user && (pathname === '/login' || pathname === '/register')) {
+        // User is authenticated but on login/register page, redirect to dashboard
+        router.push('/dashboard')
+      } else if (!user && pathname !== '/login' && pathname !== '/register' && pathname !== '/') {
+        // User is not authenticated and not on public pages, redirect to login
+        router.push('/login')
+      }
+    }
+  }, [user, isLoading, pathname, router])
 
   const login = async (data: LoginRequest) => {
     await loginMutation.mutateAsync(data)
@@ -120,7 +148,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const value: AuthContextType = {
     user: user || null,
     isLoading: isLoading || loginMutation.isPending || registerMutation.isPending,
-    isAuthenticated,
+    isAuthenticated: !!user, // User is authenticated if user data exists
     login,
     register,
     logout,
@@ -133,13 +161,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
 // Hook for protected routes
 export function useRequireAuth() {
   const { isAuthenticated, isLoading } = useAuth()
+  const router = useRouter()
   
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       // Redirect to login page
-      window.location.href = '/login'
+      router.push('/login')
     }
-  }, [isAuthenticated, isLoading])
+  }, [isAuthenticated, isLoading, router])
 
   return { isAuthenticated, isLoading }
 }

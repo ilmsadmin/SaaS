@@ -19,8 +19,7 @@ export default function LoginForm() {
     try {
       await login(formData)
       toast('Login successful! Redirecting...', 'success')
-      // Redirect will be handled by auth context
-      window.location.href = '/dashboard'
+      // Let auth context handle the redirect by triggering a re-render
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Login failed'
       toast(errorMessage, 'error')

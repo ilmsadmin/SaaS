@@ -118,12 +118,12 @@ services:
       dockerfile: Dockerfile
     container_name: zplus-tenant-service
     environment:
-      - PORT=8089
+      - PORT=8082
       - DATABASE_URL=postgres://postgres:postgres123@postgres:5432/zplus_saas?sslmode=disable
       - REDIS_URL=redis://redis:6379
       - JWT_SECRET=your-super-secret-jwt-key
     ports:
-      - "8089:8089"
+      - "8082:8082"
     depends_on:
       - postgres
       - redis
@@ -136,11 +136,11 @@ services:
       dockerfile: Dockerfile
     container_name: zplus-crm-service
     environment:
-      - PORT=8082
+      - PORT=8083
       - DATABASE_URL=postgres://postgres:postgres123@postgres:5432/zplus_saas?sslmode=disable
       - REDIS_URL=redis://redis:6379
     ports:
-      - "8082:8082"
+      - "8083:8083"
     depends_on:
       - postgres
       - redis
@@ -153,14 +153,14 @@ services:
       dockerfile: Dockerfile
     container_name: zplus-lms-service
     environment:
-      - PORT=8083
+      - PORT=8084
       - DATABASE_URL=postgres://postgres:postgres123@postgres:5432/zplus_saas?sslmode=disable
       - REDIS_URL=redis://redis:6379
       - MINIO_ENDPOINT=minio:9000
       - MINIO_ACCESS_KEY=minioadmin
       - MINIO_SECRET_KEY=minioadmin123
     ports:
-      - "8083:8083"
+      - "8084:8084"
     depends_on:
       - postgres
       - redis
@@ -174,11 +174,11 @@ services:
       dockerfile: Dockerfile
     container_name: zplus-pos-service
     environment:
-      - PORT=8084
+      - PORT=8085
       - DATABASE_URL=postgres://postgres:postgres123@postgres:5432/zplus_saas?sslmode=disable
       - REDIS_URL=redis://redis:6379
     ports:
-      - "8084:8084"
+      - "8085:8085"
     depends_on:
       - postgres
       - redis
@@ -226,13 +226,13 @@ services:
       dockerfile: Dockerfile
     container_name: zplus-file-service
     environment:
-      - PORT=8087
+      - PORT=8088
       - DATABASE_URL=postgres://postgres:postgres123@postgres:5432/zplus_saas?sslmode=disable
       - MINIO_ENDPOINT=minio:9000
       - MINIO_ACCESS_KEY=minioadmin
       - MINIO_SECRET_KEY=minioadmin123
     ports:
-      - "8087:8087"
+      - "8088:8088"
     depends_on:
       - postgres
       - minio
@@ -245,13 +245,13 @@ services:
       dockerfile: Dockerfile
     container_name: zplus-payment-service
     environment:
-      - PORT=8088
+      - PORT=8087
       - DATABASE_URL=postgres://postgres:postgres123@postgres:5432/zplus_saas?sslmode=disable
       - REDIS_URL=redis://redis:6379
       - STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key
       - STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
     ports:
-      - "8088:8088"
+      - "8087:8087"
     depends_on:
       - postgres
       - redis
@@ -278,6 +278,26 @@ services:
       - zplus-network
     volumes:
       - ./apps/frontend/web:/app
+      - /app/node_modules
+      - /app/.next
+
+  admin-app:
+    build:
+      context: ./apps/frontend/admin
+      dockerfile: Dockerfile
+    container_name: zplus-admin-app
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:8080
+      - NEXT_PUBLIC_ADMIN_API_URL=http://localhost:8080/admin
+    ports:
+      - "3001:3001"
+    depends_on:
+      - api-gateway
+    networks:
+      - zplus-network
+    volumes:
+      - ./apps/frontend/admin:/app
       - /app/node_modules
       - /app/.next
 

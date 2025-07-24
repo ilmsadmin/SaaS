@@ -1,44 +1,74 @@
-# Build and Development Scripts
-.PHONY: help build dev test clean docker-build docker-up docker-down migrate seed lint format
+# Build and Development Scripts for Zplus SaaS Platform
+.PHONY: help build dev test clean docker-build docker-up docker-down migrate seed lint format install start stop restart logs status health setup
 
 # Default target
 help: ## Show this help message
+	@echo "🚀 Zplus SaaS Platform - Available Commands"  
+	@echo "============================================"
 	@echo 'Usage: make <target>'
 	@echo ''
 	@echo 'Available targets:'
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  %-20s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-# Development
-dev: ## Start development environment
-	@echo "Starting development environment..."
-	docker-compose up -d postgres mongodb redis minio
-	@echo "Waiting for databases to be ready..."
-	sleep 10
-	@echo "Running migrations..."
-	$(MAKE) migrate
-	@echo "Starting backend services..."
-	go run apps/backend/api-gateway/cmd/main.go &
-	go run apps/backend/auth-service/cmd/main.go &
-	@echo "Starting frontend..."
-	cd apps/frontend/web && npm run dev
+# Quick setup for new developers
+setup: install build start ## Complete setup for new developers
+	@echo "🎉 Setup completed! Platform is ready to use."
+	@echo "Main App: http://localhost:3000"
+	@echo "Admin: http://localhost:3001"
 
-dev-setup: ## Setup development environment
-	@echo "Setting up development environment..."
-	@echo "Installing Go dependencies..."
-	go mod download
-	@echo "Installing frontend dependencies..."
-	cd apps/frontend/web && npm install
-	cd apps/frontend/mobile && npm install
-	cd apps/frontend/admin && npm install
-	@echo "Installing shared package dependencies..."
-	cd packages/ui && npm install
-	cd packages/types && npm install
-	cd packages/utils && npm install
-	cd packages/config && npm install
-	@echo "Creating environment files..."
-	cp .env.example .env
-	cp apps/frontend/web/.env.example apps/frontend/web/.env.local
-	@echo "Development environment setup complete!"
+# Install dependencies
+install: ## Install dependencies for all services
+	@echo "📦 Installing dependencies..."
+	@cd apps/frontend/web && npm install
+	@cd apps/frontend/admin && npm install  
+	@go mod download
+	@echo "✅ Dependencies installed!"
+
+# Start all services
+start: ## Start all services with Docker
+	@echo "🚀 Starting all services..."
+	@./start-all.sh
+
+# Stop all services
+stop: ## Stop all services
+	@echo "🛑 Stopping all services..."
+	@docker-compose down
+	@echo "✅ All services stopped!"
+
+# Restart all services
+restart: stop start ## Restart all services
+
+# View logs
+logs: ## View logs from all services
+	@docker-compose logs -f
+
+# Check service status
+status: ## Check status of all services
+	@echo "📊 Service Status:"
+	@docker-compose ps
+
+# Health check
+health: ## Check health of all services
+	@echo "🏥 Checking service health..."
+	@curl -s http://localhost:8080/health && echo "API Gateway: ✅" || echo "API Gateway: ❌"
+	@curl -s http://localhost:8081/health && echo "Auth Service: ✅" || echo "Auth Service: ❌"  
+	@curl -s http://localhost:8082/health && echo "Tenant Service: ✅" || echo "Tenant Service: ❌"
+	@curl -s http://localhost:8083/health && echo "CRM Service: ✅" || echo "CRM Service: ❌"
+	@curl -s http://localhost:8084/health && echo "LMS Service: ✅" || echo "LMS Service: ❌"
+	@curl -s http://localhost:8085/health && echo "POS Service: ✅" || echo "POS Service: ❌"
+	@curl -s http://localhost:8086/health && echo "Checkin Service: ✅" || echo "Checkin Service: ❌"
+	@curl -s http://localhost:8087/health && echo "Payment Service: ✅" || echo "Payment Service: ❌"
+	@curl -s http://localhost:8088/health && echo "File Service: ✅" || echo "File Service: ❌"
+	@curl -s http://localhost:8089/health && echo "HRM Service: ✅" || echo "HRM Service: ❌"
+
+# Development modes
+dev-web: ## Start web frontend in development mode
+	@echo "🔥 Starting web frontend in dev mode..."
+	@cd apps/frontend/web && npm run dev
+
+dev-admin: ## Start admin frontend in development mode
+	@echo "🔥 Starting admin frontend in dev mode..."
+	@cd apps/frontend/admin && npm run dev
 
 # Building
 build: ## Build all services

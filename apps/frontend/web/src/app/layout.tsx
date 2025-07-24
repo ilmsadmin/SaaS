@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import { QueryProviders } from '@/lib/providers'
 import { ToastProvider } from '@/components/ui/toast-provider'
+import AuthDebugger from '@/components/AuthDebugger'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -23,6 +24,7 @@ export default function RootLayout({
         <QueryProviders>
           <ToastProvider>
             {children}
+            <AuthDebugger />
           </ToastProvider>
         </QueryProviders>
       </body>
